@@ -51,7 +51,7 @@ object Interview {
 
       }
     }
-    df2.write.option("header","true").option("charset","UTF-8").option("escape", "\"").mode(SaveMode.Overwrite).csv("D:/csv_output/temp_test")
+    df2.write.option("header","true").option("charset","UTF-8").option("escape", "\"").mode(SaveMode.Overwrite).csv("csv_output/temp_test")
   }
 
 }
