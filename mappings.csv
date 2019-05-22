@@ -1,0 +1,10 @@
+OUTPUT_COLUMN,DEPENDENT_COLUMN,COMMAND,LOGIC
+DirectMapColumn,AccountingDate,DirectMap,AccountingDate
+StaticValueColumn,null,StaticValue,Yugandhar
+AddPrefixColumn,AccountingDate,AddPrefix,AccountingDate|myPrefix
+NullColumn,null,NullColumn,null
+SubstringColumn,AccountingDate,Substring,AccountingDate|0|4
+ChangeDateColumn,AccountingDate,ChangeDateFormat,AccountingDate|yyyy-MM-dd|dd-MM-yyyy
+AddPrefixIfNotNull,ERPCommodityId,AddPrefixIfNotNull,PREFIX123-
+Amount,Amount,FillNull,0.00|Amount
+Month,AccountingDate,Substring,AccountingDate|6|2
