@@ -1,12 +1,7 @@
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 
-case class Transformation(
-                           outputColumn :String,
-                           dependentColumn:String,
-                           command:String,
-                           logic:String
-                         )
+
 object Dynamic1 {
 
   def main(args: Array[String]): Unit = {
@@ -14,19 +9,44 @@ object Dynamic1 {
     val spark = SparkSession.builder().master("local").appName("Interview").getOrCreate()
     spark.sparkContext.setLogLevel("Error")
 
-    val source = scala.io.Source.fromFile("mappings.csv")
-    val lines = source.getLines().drop(1)
-    val transformations=lines.map{
-      line => {
+    val inputPath="sample.csv"
+    val inputFile=inputPath.split('.')(0)
+    // Reading  configuration file
+    val transformation_configs_source=scala.io.Source.fromFile("configs.csv")
+    // Drop the header of configuration file
+    val transformation_configs_lines=transformation_configs_source.getLines().drop(1)
+    // Converting configuration file to list of TransformationConfiguration object
+    val transformation_configs=transformation_configs_lines.map {
+      line=> {
         val p=line.split(",")
-        Transformation(p(0),p(1),p(2),p(3))
-
+        TransformationConfigure(p(0),p(1))
       }
     }
 
+    // Filter transformation(s) applied on current input file
+    // If more than one transformation, first transformation is considered
+    val transformation_applied=transformation_configs
+      .filter(p=>p.file_config_name.equalsIgnoreCase(inputFile))
+      .map(p=>p.transformation).toList.head
+
+    // Reading mappings file
+    val transformation_mappings_source = scala.io.Source.fromFile("mappings.csv")
+    // drop header of mapping filre
+    val lines = transformation_mappings_source.getLines().drop(1)
+    // converting mappings file to list of transformation mappings and filtering the
+    // transformation applied on the input file
+    val transformations_mappings=lines.map{
+      line => {
+        val p=line.split(",")
+        TransformationMappings(p(0),p(1),p(2),p(3),p(4))
+
+      }
+    }.filter(p=>p.transformation.equalsIgnoreCase(transformation_applied))
+
+
    
 
-    val transformationsMap=transformations.map(x=>x.outputColumn -> x).toMap
+    val transformationsMap=transformations_mappings.map(x=>x.outputColumn -> x).toMap
 
     val outputColumns=transformationsMap.map(x=>x._1)
 
@@ -35,7 +55,7 @@ object Dynamic1 {
       .option("header", true)
       .option("sep", ",")
       .option("charset", "UTF-8")
-      .csv("sample.csv")
+      .csv(inputPath)
 
 
 
