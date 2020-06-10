@@ -1,4 +1,4 @@
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{SaveMode, SparkSession,Row}
 import org.apache.spark.sql.functions._
 
 
@@ -11,9 +11,53 @@ object Interview {
 
     val df = spark.read
       .option("header", true)
+      .option("inferSchema",true)
       .option("sep", ",")
       .option("charset", "UTF-8")
-      .csv("sample.csv")
+      .csv("D://bucket/LEVEL1/LEVEL2/LEVEL3/LEVEL4/sample1.csv")
+    val ll=List("min","max")
+
+ /*
+    // Find minimum and maximum of a column in data frame
+ println(df.count)
+    df.schema.toList.foreach{
+      i=>{
+        println(i)
+      }
+    }
+
+    println(df.describe().show(10))
+
+    val l=df.describe().filter(col("summary").isin(ll:_*)).collect().toList.map(r=>r.getString(0)->r).toMap
+    println(l)
+    l.foreach(println(_))
+    val minRow:Row=l("min")
+    val maxRow:Row=l("max")
+
+    val index=minRow.fieldIndex("InvoiceId")
+    println(minRow.getString(index))
+
+*/
+
+ // concat multiple columns
+    val logic="Quantity|-|InvoiceId|InvoiceLineNumber|City"
+    val list=logic.split("\\|")
+    val zippedList=list.zipWithIndex
+    val concatExpression=zippedList.map{
+      case (item,index) => {
+        if(index/2 == 0) col(item) else lit(item)
+      }
+    }
+
+    concatExpression.foreach(println(_))
+    println(concatExpression)
+    df.withColumn("ConcatExpression",concat(col("Quantity"),lit("-"))).show()
+
+
+
+
+
+/*
 
     val pullnumeric = udf {
       (input: String) => {
@@ -23,10 +67,9 @@ object Interview {
 
     val numbered_date = udf {
       (input: String) =>
-        val date_array = input.split("-")
+        val date_array = input.split(" ")(0).split("-")
         date_array.map(_.toInt).sum
     }
-
     // column rename
     df.withColumnRenamed("AccountingDate", "Date").show()
     // copy one column to other column
@@ -48,10 +91,12 @@ object Interview {
     val columns = df.columns
     val df2 = columns.foldLeft(df) { (tempdf, column_name) => {
             tempdf.withColumn(column_name, regexp_replace(col(column_name),"-", "\"")).withColumn(column_name,regexp_replace(col(column_name),"\"","\"\"\""))
-
       }
     }
-    df2.write.option("header","true").option("charset","UTF-8").option("escape", "\"").mode(SaveMode.Overwrite).csv("csv_output/temp_test")
+    df2.show()
+*/
+//    df2.write.option("header","true").option("charset","UTF-8").option("escape", "\"").mode(SaveMode.Overwrite).csv("csv_output/temp_test")
+
   }
 
 }

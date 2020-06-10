@@ -57,7 +57,8 @@ object Dynamic1 {
       .option("charset", "UTF-8")
       .csv(inputPath)
 
-
+    df.withColumn("_temp",split(col("ERPCommodityId"),"-").getItem(1)).show
+/*
 
     val df3= outputColumns.foldLeft(df){
       case (tempdf,outputColumn) => {
@@ -85,6 +86,7 @@ object Dynamic1 {
     }
 
     df3.show
+*/
 
 
   }
