@@ -51,9 +51,10 @@ object Interview {
 
     concatExpression.foreach(println(_))
     println(concatExpression)
-    df.withColumn("ConcatExpression",concat(col("Quantity"),lit("-"))).show()
+    df.withColumn("ConcatExpression",concat(col("Quantity"),lit("-"))).show
 
-
+// select all the column names ending with _flag
+    df.select(df.columns.filter(x=>x.endsWith("Id")).map(df(_)) : _*).show
 
 
 
