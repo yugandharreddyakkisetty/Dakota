@@ -1,5 +1,6 @@
-import org.apache.spark.sql.{SaveMode, SparkSession,Row}
+import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.IntegerType
 
 
 object Interview {
@@ -8,17 +9,72 @@ object Interview {
 
     val spark = SparkSession.builder().master("local").appName("Interview").getOrCreate()
     spark.sparkContext.setLogLevel("Error")
+    import spark.implicits._
+    var path="D://bucket/LEVEL1/LEVEL2/LEVEL3/LEVEL4/sample.csv"
+
+//    path="D://ctms-corning-spark/CTMS/SHIPMENT/ELEMENTUM/DAILY/Corning_LV_Report_2020-06-10.csv"
+//    path="D://bucket/LEVEL1/LEVEL2/LEVEL3/LEVEL4/data-1593071637840.csv"
+
+
+
 
     val df = spark.read
       .option("header", true)
       .option("inferSchema",true)
       .option("sep", ",")
       .option("charset", "UTF-8")
-      .csv("D://bucket/LEVEL1/LEVEL2/LEVEL3/LEVEL4/sample1.csv")
-    val ll=List("min","max")
+      .csv(path)
+
+    df.show()
+
+  /*
+
+    // groupby count and first
+    df.groupBy("lower").agg(countDistinct("ocean_l1q_ou")).show()
+df.filter(col("lower") === "ups" && col("lower-3") ==="lima").show()
+val rightDf=df.withColumn("rate_effective_date1",unix_timestamp(col("rate_effective_date"),"yyyy-MM-dd hh:mm:ss"))
+  .withColumn("rate_expiry_date1",unix_timestamp(col("rate_expiry_date"),"yyyy-MM-dd hh:mm:ss"))
+
+    val DF=Seq(("ups","winston salem","lima","2020-02-06 00:00:00"),("ups","winston salem","lima","2020-01-01 00:00:00"))
+      .toDF("carrier","origin","destination","date")
+    DF.show()
+    val leftDF=DF.withColumn("date1",unix_timestamp(col("date")))
+val expression="`lower` == `carrier` and `origin` == `lower-2` and `destination` == `lower-3` and `date1` >= `rate_effective_date1` and `date1` <= `rate_expiry_date1`"
+
+    leftDF.join(rightDf,expr(expression),"left")
+      .drop("lower","lower-2","lower-3","rate_effective_date","rate_effective_date1","count","rate_expiry_date1","rate_expiry_date","date1")
+      .groupBy("carrier","origin","destination","date").agg(countDistinct("ocean_l1q_ou"),first("ocean_l1q_ou") ).show
+*/
+// replace and regular expression
+/*    df
+      .withColumn("Quantity-1",regexp_replace(col("AccountingDate"),"[^0-9-:\t ]+",""))
+      .show()*/
+
+    df
+      .withColumn("City-1",regexp_replace(col("City"),"[^0-9a-zA-Z-!@#$%^&*()_=+\\[\\]?\"\':;<>.]+",""))
+      .show(20,false)
+    val exp="length(col(\"City\"))>4000"
+    df.withColumn("length",when(col("City").rlike("[Uu][Nn][Kk][Nn][Oo][Ww][Nn]"),lit("more")).otherwise(lit("less"))).show(10)
+    df.withColumn("Sqeeze",regexp_replace(col("City"),"\\s+"," ")).show(10,false)
+    df.withColumn("DateRegexp",when(col("AccountingDate").rlike("^\\d\\d\\d\\d-\\d\\d-\\d\\d|NULL"),lit("more")).otherwise(lit("less"))).show(10)
+    df.withColumn("current",current_timestamp()).show(10,false)
+
+    df
+      .withColumn("NULL_COLUMN",lit(null).cast("string"))
+      .withColumn("pattern",lit("^(?!\\d\\d\\d\\d-\\d\\d-\\d\\d).*"))
+      .withColumn("AccountingDate2",regexp_replace(col("AccountingDate"),"^(?!\\d\\d\\d\\d-\\d\\d-\\d\\d).*",""))
+      .withColumn("AccountingDate3",regexp_replace(col("AccountingDate"), col("pattern"),col("NULL_COLUMN")))
+      .withColumn("InvoiceLineNumber",col("InvoiceLineNumber").cast(IntegerType))
+      .printSchema()
+      //.show(20,false)
+    val expression="mode != \"AIR\" and mode != \"SEA\" and mode != \"FTL\" and mode != \"LTL\""
+    df.filter(expr(expression)).show()
+
 
  /*
     // Find minimum and maximum of a column in data frame
+    print(df.schema)
+        val ll=List("min","max")
  println(df.count)
     df.schema.toList.foreach{
       i=>{
@@ -39,24 +95,18 @@ object Interview {
 
 */
 
+/*
  // concat multiple columns
-    val logic="Quantity|-|InvoiceId|InvoiceLineNumber|City"
-    val list=logic.split("\\|")
-    val zippedList=list.zipWithIndex
-    val concatExpression=zippedList.map{
-      case (item,index) => {
-        if(index/2 == 0) col(item) else lit(item)
-      }
-    }
+    val logic="Quantity|InvoiceId|InvoiceLineNumber|City"
+    val list=logic.split("\\|").map(x=>col(x)).toList
 
-    concatExpression.foreach(println(_))
-    println(concatExpression)
-    df.withColumn("ConcatExpression",concat(col("Quantity"),lit("-"))).show
+    df.withColumn("ConcatExpression",concat(list:_*)).show(10,false)
 
 // select all the column names ending with _flag
     df.select(df.columns.filter(x=>x.endsWith("Id")).map(df(_)) : _*).show
 
 
+*/
 
 /*
 
